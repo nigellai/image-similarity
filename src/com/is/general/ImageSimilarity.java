@@ -28,7 +28,7 @@ import com.beust.jcommander.ParameterException;
 public class ImageSimilarity {
 
 	private final static Logger LOG = Logger.getLogger(ImageSimilarity.class .getName()); 
-    
+	
 	@Parameter
 	private List<String> parameters = new ArrayList<String>();
 	
@@ -43,6 +43,9 @@ public class ImageSimilarity {
 
 	@Parameter(names = {"-d", "--dir"}, description = "Absolute Path to directory with images to compare with")
 	private String dir;
+	
+	@Parameter(names = {"-t", "--threads"}, description = "Number of threads")
+	private int threads;
 
 	private static JCommander jc;
 	
@@ -91,7 +94,10 @@ public class ImageSimilarity {
 				e.printStackTrace();
 			}
 		}
-		
+		if(threads==0)
+		{
+			threads=1;
+		}
 		// Set up the logger
 		try {
 			ISLogger.setup();
@@ -137,7 +143,8 @@ public class ImageSimilarity {
 		
 		// Compare images
 		try {
-			Compare compare = new Compare(image, directory);
+			
+			Compare compare = new Compare(image, directory, threads);
 			
 			List<ImageHolder> images = compare.getResults();
 			for(ImageHolder i : images)

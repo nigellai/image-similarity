@@ -1,5 +1,6 @@
 package com.is.algorithm;
 
+
 import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
@@ -24,7 +25,9 @@ import com.is.utils.ImageHolder;
  * with all others in the same directory.
  */
 
-public class Compare {
+
+
+public class Compare extends Thread{
 
 	// The reference image "signature" (25 representative pixels, each in R,G,B).
 	// We use instances of Color to make things simpler.
@@ -37,32 +40,59 @@ public class Compare {
 	private static final String basePath = "/";
 	  
 	private List<ImageHolder> images = null;
+	private File[] others = null;
+	private RenderedImage[] rothers = null;
+	private double[] distances = null;
+	private Thread[] compareThread;
+	private boolean[] threadWorks;
+	private int threads;
+	public long waitMills=100;
 	
-	public Compare(File reference, File directory) throws IOException
+	public Compare(File reference, File directory, int _threads) throws IOException
 	{
+		//Number of threads
+		threads = _threads;
+		compareThread = new Thread[threads];
+		threadWorks = new boolean[threads];
 	
 		// Scale image
 		RenderedImage ref = rescale(ImageIO.read(reference));
+		
 	    
 		// Calculate the signature vector for the reference.
 	    signature = calcSignature(ref);
 	    
+	   
 	    // Now we need a component to store X images in a stack, where X is the
 	    // number of images in the same directory as the original one.
-	    File[] others = getOtherImageFiles(directory); // TODO: Get images from other locations, rather than reference's parent folder
-	       
+	    
+	    others = getOtherImageFiles(directory); // TODO: Get images from other locations, rather than reference's parent folder
+	    
 	    // For each image, calculate its signature and its distance from the
 	    // reference signature.
-	    RenderedImage[] rothers = new RenderedImage[others.length];
 	    
-	    double[] distances = new double[others.length];
+	    rothers = new RenderedImage[others.length];
 	    
-	    for (int o = 0; o < others.length; o++)
-	    {
-	    	rothers[o] = rescale(ImageIO.read(others[o]));
-	        distances[o] = calcDistance(rothers[o]);
-	    }
+	    distances = new double[others.length];
 	    
+	    
+	    
+	    for(int i=0;i<threads;i++)
+		{
+	    	
+	    	compareThread[i] = new Thread(new CompareRunnable(i));
+	    	threadWorks[i]=true;
+	    	compareThread[i].start();
+		}
+	    
+			try {
+				while(isThreadsWorks())
+					Thread.sleep(waitMills);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		
 	    // Sort those vectors *together*.
 	    for (int p1 = 0; p1 < others.length - 1; p1++)
 	    {
@@ -218,5 +248,45 @@ public class Compare {
 	{
 		return images;
 	}
-	 
+	class CompareRunnable implements Runnable
+	{
+		private int i;
+		CompareRunnable(int _i)
+		{
+			i=_i;
+		}
+		@Override
+		public void run() 
+		{
+			
+	    		try 
+	    		{
+	    			for (int o = i; o < others.length; o+=threads)
+	    		    {
+	    		    	rothers[o] = rescale(ImageIO.read(others[o]));
+	    		        distances[o] = calcDistance(rothers[o]);
+	    		    }
+	    			threadWorks[i]=false;
+				} catch (IOException e) 
+				{
+					e.printStackTrace();
+				}
+    		
+			
+		}
+		
+	}
+	 public boolean isThreadsWorks()
+	 {
+		 int works=0;
+		 for(int t=0;t<threads;t++)
+			 if(threadWorks[t])
+				 works++;
+		 if(works!=0)
+			 return true;
+		 return false;
+	 }
 }
+	
+
+
