@@ -3,8 +3,15 @@
  */
 package com.is.general;
 
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,10 +101,11 @@ public class ImageSimilarity {
 				e.printStackTrace();
 			}
 		}
-		if(threads==0)
+		if(threads == 0)
 		{
-			threads=1;
+			threads = 1;
 		}
+		
 		// Set up the logger
 		try {
 			ISLogger.setup();
@@ -121,7 +129,71 @@ public class ImageSimilarity {
 	{
 		if(Check.url(img))
 		{
-			// TODO: Download image from URL, save it somewhere, and update variable `img` with new path of downloaded file
+			if(!img.toLowerCase().endsWith(".jpeg") && !img.toLowerCase().endsWith(".jpg"))
+			{
+				throw new RuntimeException("ImageSimilarity accepts only JPEG files!");
+			}
+			
+			URL url;
+			
+			try {
+				url = new URL(img);
+				
+				HttpURLConnection huc;
+				
+				try {
+					huc = ( HttpURLConnection )  url.openConnection ();
+					huc.setRequestMethod ("GET");  //OR  huc.setRequestMethod ("HEAD"); 
+					
+					huc.connect () ; 
+					int code = huc.getResponseCode() ;
+
+					if(code < 200 || code > 300) // Accept all 2XX codes.
+					{
+						throw new RuntimeException("URL " + img + " returned " + code + " http error code!");
+					}
+					
+				} catch (IOException e1) {
+					throw new RuntimeException("Error occurred with testing connection for " + img);
+				} 
+				
+				InputStream in;
+				ByteArrayOutputStream out;
+				
+				try {
+					in = new BufferedInputStream(url.openStream());
+					
+					out = new ByteArrayOutputStream();
+					
+					byte[] buf = new byte[1024];
+					int n = 0;
+					while (-1!=(n=in.read(buf)))
+					{
+					   out.write(buf, 0, n);
+					}
+					
+					out.close();
+					in.close();
+					byte[] response = out.toByteArray();
+					
+					// Creates temporary image file
+					File tf = File.createTempFile("image-similarity-temp", ".jpg");
+					
+					// Deletes file when the virtual machine terminate
+			        tf.deleteOnExit();
+					
+			        img = tf.getAbsolutePath();
+			        
+					FileOutputStream fos = new FileOutputStream(img);
+					
+				    fos.write(response);
+				    fos.close();
+				} catch (IOException e) {
+					throw new RuntimeException("Error occurred with donwloading a file form URL " + img);
+				}
+			} catch (MalformedURLException e1) {
+				throw new RuntimeException("Wrong URL " + img);
+			}
 		}
 		
 		File image = new File(img);
