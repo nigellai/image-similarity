@@ -1,6 +1,5 @@
 package com.is.algorithm;
 
-
 import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
@@ -19,14 +18,13 @@ import javax.media.jai.iterator.RandomIterFactory;
 import com.is.filters.JPEGFilter;
 import com.is.utils.ImageHolder;
 
-
 /**
  * This class uses a very simple, naive similarity algorithm to compare an image
- * with all others in the same directory.
+ * with all images in specified directory
+ * 
+ * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+ * @author Lukasz Pycia <fryta1990@gmail.com>
  */
-
-
-
 public class Compare extends Thread{
 
 	// The reference image "signature" (25 representative pixels, each in R,G,B).
@@ -58,15 +56,13 @@ public class Compare extends Thread{
 		// Scale image
 		RenderedImage ref = rescale(ImageIO.read(reference));
 		
-	    
 		// Calculate the signature vector for the reference.
 	    signature = calcSignature(ref);
 	    
-	   
 	    // Now we need a component to store X images in a stack, where X is the
 	    // number of images in the same directory as the original one.
 	    
-	    others = getOtherImageFiles(directory); // TODO: Get images from other locations, rather than reference's parent folder
+	    others = getOtherImageFiles(directory);
 	    
 	    // For each image, calculate its signature and its distance from the
 	    // reference signature.
@@ -75,23 +71,20 @@ public class Compare extends Thread{
 	    
 	    distances = new double[others.length];
 	    
-	    
-	    
 	    for(int i=0;i<threads;i++)
 		{
-	    	
 	    	compareThread[i] = new Thread(new CompareRunnable(i));
 	    	threadWorks[i]=true;
 	    	compareThread[i].start();
 		}
 	    
-			try {
-				while(isThreadsWorks())
-					Thread.sleep(waitMills);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		try {
+			while(isThreadsWorks())
+				Thread.sleep(waitMills);
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	    // Sort those vectors *together*.
 	    for (int p1 = 0; p1 < others.length - 1; p1++)
