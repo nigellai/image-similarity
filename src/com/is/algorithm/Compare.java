@@ -25,8 +25,8 @@ import com.is.utils.ImageHolder;
  * @author Grzegorz Polek <grzegorz.polek@gmail.com>
  * @author Lukasz Pycia <fryta1990@gmail.com>
  */
-public class Compare extends Thread{
-
+public class Compare extends Thread
+{
 	// The reference image "signature" (25 representative pixels, each in R,G,B).
 	// We use instances of Color to make things simpler.
 	private Color[][] signature;
@@ -46,9 +46,21 @@ public class Compare extends Thread{
 	private int threads;
 	public long waitMills=100;
 	
+	/**
+	 * Constructor for comparing reference file with all images inside specified directory.
+	 * 
+	 * @param reference	the reference file
+	 * @param directory	the directory with files to compare with reference
+	 * @param _threads	number of threads to run on
+	 * @throws IOException
+	 * @see File
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 * @author Lukasz Pycia <fryta1990@gmail.com>
+	 */
 	public Compare(File reference, File directory, int _threads) throws IOException
 	{
-		//Number of threads
+		// Number of threads
 		threads = _threads;
 		compareThread = new Thread[threads];
 		threadWorks = new boolean[threads];
@@ -60,13 +72,11 @@ public class Compare extends Thread{
 	    signature = calcSignature(ref);
 	    
 	    // Now we need a component to store X images in a stack, where X is the
-	    // number of images in the same directory as the original one.
-	    
+	    // number of images in specified directory.
 	    others = getOtherImageFiles(directory);
 	    
 	    // For each image, calculate its signature and its distance from the
 	    // reference signature.
-	    
 	    rothers = new RenderedImage[others.length];
 	    
 	    distances = new double[others.length];
@@ -82,8 +92,7 @@ public class Compare extends Thread{
 			while(isThreadsWorks())
 				Thread.sleep(waitMills);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			// TODO: do something if thread fails
 		}
 		
 	    // Sort those vectors *together*.
@@ -115,9 +124,14 @@ public class Compare extends Thread{
 	    }
 	}
 	   
-	/*
-	 * This method rescales an image to 300,300 pixels using the JAI scale
-	 * operator.
+	/**
+	 * This method rescales an image to 300,300 pixels using the JAI scale operator.
+	 * 
+	 * @param i	Image			
+	 * @return RenderedImage
+	 * @see RenderedImage
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 */
 	private RenderedImage rescale(RenderedImage i)
 	{
@@ -137,8 +151,13 @@ public class Compare extends Thread{
 	    return JAI.create("scale", pb);
 	}
 	    
-	/*
+	/**
 	 * This method calculates and returns signature vectors for the input image.
+	 * 
+	 * @param i RenderedImage
+	 * @return <code>array</code> of pixels signature
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 */
 	private Color[][] calcSignature(RenderedImage i)
 	{
@@ -157,10 +176,17 @@ public class Compare extends Thread{
 	    return sig;
 	}
 	   
-	/*
+	/**
 	 * This method averages the pixel values around a central point and return the
 	 * average as an instance of Color. The point coordinates are proportional to
 	 * the image.
+	 * 
+	 * @param i
+	 * @param px
+	 * @param py
+	 * @return
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 */
 	private Color averageAround(RenderedImage i, double px, double py)
 	{
@@ -197,10 +223,15 @@ public class Compare extends Thread{
 	      
 	}
 	   
-	/*
+	/**
 	 * This method calculates the distance between the signatures of an image and
 	 * the reference one. The signatures for the image passed as the parameter are
 	 * calculated inside the method.
+	 * 
+	 * @param other
+	 * @return <code>double</code> with distance between distances
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 */
 	private double calcDistance(RenderedImage other)
 	{
@@ -226,9 +257,14 @@ public class Compare extends Thread{
 		return dist;
 	}
 	   
-	/*
+	/**
 	 * This method get all image files in the same directory as the reference.
 	 * Just for kicks include also the reference image.
+	 * 
+	 * @param directory
+	 * @return <code>array</code> of files from speified directory
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 */
 	private File[] getOtherImageFiles(File directory)
 	{
@@ -237,40 +273,61 @@ public class Compare extends Thread{
 		return others;
 	}
 	
+	/**
+	 * Nothing special. Just List<> with ImageHolder's of algorithm's results
+	 * 
+	 * @see ImageHolder
+	 * @return
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 */
 	public List<ImageHolder> getResults()
 	{
 		return images;
 	}
+	
+	/**
+	 * Class which implements Runnable interface to run on multiple threads
+	 * 
+	 * @author Lukasz Pycia <fryta1990@gmail.com>
+	 */
 	class CompareRunnable implements Runnable
 	{
 		private int i;
+		
 		CompareRunnable(int _i)
 		{
 			i=_i;
 		}
+		
 		@Override
 		public void run() 
 		{
-			
-	    		try 
-	    		{
-	    			for (int o = i; o < others.length; o+=threads)
-	    		    {
-	    		    	rothers[o] = rescale(ImageIO.read(others[o]));
-	    		        distances[o] = calcDistance(rothers[o]);
-	    		    }
-	    			threadWorks[i]=false;
-				} catch (IOException e) 
-				{
-					e.printStackTrace();
-				}
-    		
-			
+    		try 
+    		{
+    			for (int o = i; o < others.length; o+=threads)
+    		    {
+    		    	rothers[o] = rescale(ImageIO.read(others[o]));
+    		        distances[o] = calcDistance(rothers[o]);
+    		    }
+    			threadWorks[i]=false;
+			} 
+    		catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
 		}
 		
 	}
-	 public boolean isThreadsWorks()
-	 {
+	
+	/**
+	 * Checks if thread is working
+	 * 
+	 * @return <code>true</code> if thread is working or <code>false</code> it not
+	 * @author Lukasz Pycia <fryta1990@gmail.com>
+	 */
+	public boolean isThreadsWorks()
+	{
 		 int works=0;
 		 for(int t=0;t<threads;t++)
 			 if(threadWorks[t])

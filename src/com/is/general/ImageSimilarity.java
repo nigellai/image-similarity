@@ -1,6 +1,3 @@
-/**
- * 
- */
 package com.is.general;
 
 import java.io.BufferedInputStream;
@@ -29,8 +26,9 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 
 /**
+ * Class that checks for similarity between two images using naive algorithm
+ * 
  * @author Grzegorz Polek <grzegorz.polek@gmail.com>
- *
  */
 public class ImageSimilarity {
 
@@ -80,6 +78,12 @@ public class ImageSimilarity {
 		is.setup();
 	}
 	
+	/**
+	 * Setups all necessary things for this application
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 * @author Lukasz Pycia <fryta1990@gmail.com>
+	 */
 	private void setup()
 	{
 		// Show help
@@ -125,6 +129,11 @@ public class ImageSimilarity {
 		}
 	}
 	
+	/**
+	 * Runs algorithm and checks some things
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 */
 	private void run()
 	{
 		if(Check.url(img))

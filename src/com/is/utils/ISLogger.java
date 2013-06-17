@@ -9,6 +9,8 @@ import java.util.logging.SimpleFormatter;
 
 
 /**
+ * Just logger class.
+ * 
  * Usage:
  * 
  * You have to set level first:
@@ -24,20 +26,29 @@ import java.util.logging.SimpleFormatter;
  *
  */
 public class ISLogger {
-  static private FileHandler fileTxt;
-  static private SimpleFormatter formatterTxt;
 
-  static public void setup() throws IOException {
+	static private FileHandler fileTxt;
+	static private SimpleFormatter formatterTxt;
 
-    // Get the global logger to configure it
-    Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
-
-    logger.setLevel(Level.INFO);
-    fileTxt = new FileHandler("is-log.txt");
-
-    // Create txt Formatter
-    formatterTxt = new SimpleFormatter();
-    fileTxt.setFormatter(formatterTxt);
-    logger.addHandler(fileTxt);
-  }
+	/**
+	 * Setup function for ISLogger
+	 * 
+	 * @throws IOException
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 */
+	static public void setup() throws IOException 
+	{
+	    // Get the global logger to configure it
+	    Logger logger = Logger.getLogger(Logger.GLOBAL_LOGGER_NAME);
+	
+	    logger.setLevel(Level.INFO);
+	    fileTxt = new FileHandler("is-log.txt");
+	
+	    // Create txt Formatter
+	    formatterTxt = new SimpleFormatter();
+	    fileTxt.setFormatter(formatterTxt);
+	    logger.addHandler(fileTxt);
+	}
+  
 } 
