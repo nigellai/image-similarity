@@ -111,7 +111,7 @@ public class Compare extends Thread{
 	    // Do something with files
 	    for (int o = 0; o < others.length; o++)
 	    {
-	    	images.add(new ImageHolder(others[o], rothers[o], distances[o]));
+	    	images.add(new ImageHolder(others[o], distances[o]));
 	    }
 	}
 	   

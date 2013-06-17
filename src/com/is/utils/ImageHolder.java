@@ -9,7 +9,7 @@ public class ImageHolder {
 	RenderedImage render = null;
 	double distance = 11041; // 0 - 11041
 	
-	public ImageHolder(File file, RenderedImage render, double distance)
+	public ImageHolder(File file, double distance)
 	{
 		this.file = file;
 		this.render = render;
