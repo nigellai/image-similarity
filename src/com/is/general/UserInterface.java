@@ -60,6 +60,7 @@ public class UserInterface extends JFrame {
 	final JButton btnSelectImage;
 	final JButton btnSelectImagesTo;
 	
+	private JPanel panel_2;
 	private JPanel panel_4;
 	
 	private ImagePanel panel_3;
@@ -70,6 +71,9 @@ public class UserInterface extends JFrame {
 	File directory;
 	
 	private Thread thread;
+	
+	int left = 10;
+	int top = 10;
 	
 	/**
 	 * Returns instance of UserInterface
@@ -123,7 +127,7 @@ public class UserInterface extends JFrame {
 		setTitle("ImageSimilarity");
 		setBackground(Color.DARK_GRAY);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 716, 503);
+		setBounds(100, 100, 731, 503);
 		
 		contentPane = new JPanel();
 		contentPane.setForeground(Color.LIGHT_GRAY);
@@ -181,6 +185,7 @@ public class UserInterface extends JFrame {
 		            
 		            panel_3.create(image, 200, 200);
 		            panel_3.repaint();
+		            panel_2.repaint();
 		        }
 		        
 		        if(is.ifFiles())
@@ -230,7 +235,7 @@ public class UserInterface extends JFrame {
 		});
 		panel_1.add(btnStartImageSimilarity);
 		
-		JPanel panel_2 = new JPanel();
+		panel_2 = new JPanel();
 		panel_2.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel_2.setBackground(Color.DARK_GRAY);
 		panel_2.setBounds(12, 99, 220, 344);
@@ -245,7 +250,7 @@ public class UserInterface extends JFrame {
 		panel_4 = new JPanel();
 		panel_4.setBorder(new LineBorder(new Color(0, 0, 0)));
 		panel_4.setBackground(Color.DARK_GRAY);
-		panel_4.setBounds(242, 99, 438, 344);
+		panel_4.setBounds(242, 99, 450, 344);
 		panel.add(panel_4);
 		panel_4.setLayout(null);
 		
@@ -255,15 +260,26 @@ public class UserInterface extends JFrame {
 		panel_4.add(scrollPane_1);
 	}
 	
-	public void addThumbnail(File thumb)
+	public synchronized void addThumbnail(File thumb)
 	{
 		ImagePanel panel_t = new ImagePanel();
 		panel_t.setBackground(Color.DARK_GRAY);
-		panel_t.setBounds(10, 10, 200, 200);
+		panel_t.setBounds(left, top, 100, 100);
 		panel_4.add(panel_t);
 		
 		panel_t.create(thumb, 100, 100);
 		panel_t.repaint();
+		panel_4.repaint();
+		
+		left += 110;
+		top += 0;
+		
+		if(left % 450 == 0)
+		{
+			top += 110;
+			left = 10;
+		}
+		
 	}
 	
 	class Run implements Runnable
