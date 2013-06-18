@@ -328,7 +328,7 @@ public class Compare extends Thread
     		    {
     		    	rothers[o] = rescale(ImageIO.read(others[o]));
     		        distances[o] = calcDistance(rothers[o]);
-    		        UserInterface.getInstance().addThumbnail(others[o]);
+    		        UserInterface.getInstance().addThumbnail(others[o], distances[o]);
     		        
     		        theProgress += progress;
     		        UserInterface.getInstance().setProgress(theProgress);

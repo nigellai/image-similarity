@@ -32,6 +32,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
@@ -42,6 +43,7 @@ import com.is.utils.ImagePanel;
 import javax.swing.SwingConstants;
 import javax.swing.JComboBox;
 import javax.swing.border.LineBorder;
+import javax.swing.JTextField;
 
 public class UserInterface extends JFrame {
 
@@ -62,6 +64,7 @@ public class UserInterface extends JFrame {
 	
 	private JPanel panel_2;
 	private JPanel panel_4;
+	private JScrollPane scrollPane_1;
 	
 	private ImagePanel panel_3;
 	
@@ -74,6 +77,7 @@ public class UserInterface extends JFrame {
 	
 	int left = 10;
 	int top = 10;
+	private JTextField textField;
 	
 	/**
 	 * Returns instance of UserInterface
@@ -119,6 +123,17 @@ public class UserInterface extends JFrame {
 		btnStartImageSimilarity.setEnabled(false);
 	}
 	
+	public void clearThumbnails()
+	{
+		left = 10;
+		top = 10;
+		
+		panel_4.removeAll();
+		panel_4.repaint();
+		
+		progressBar.setValue(0);
+	}
+	
 	/**
 	 * Create the frame.
 	 */
@@ -150,13 +165,13 @@ public class UserInterface extends JFrame {
 		lblNewLabel_1 = new JLabel("Please select directory with images to compare with");
 		lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
 		lblNewLabel_1.setForeground(Color.WHITE);
-		lblNewLabel_1.setBounds(324, 49, 356, 14);
+		lblNewLabel_1.setBounds(336, 49, 356, 14);
 		panel.add(lblNewLabel_1);
 		
 		// Progress bar <3
 		progressBar = new JProgressBar();
 		progressBar.setForeground(Color.RED);
-		progressBar.setBounds(12, 74, 668, 14);
+		progressBar.setBounds(12, 74, 680, 14);
 		panel.add(progressBar);
 		
 		fcf.setFileSelectionMode(JFileChooser.FILES_ONLY);
@@ -166,7 +181,7 @@ public class UserInterface extends JFrame {
 		// Panel with buttons
 		JPanel panel_1 = new JPanel();
 		panel_1.setBackground(Color.DARK_GRAY);
-		panel_1.setBounds(12, 5, 668, 33);
+		panel_1.setBounds(12, 5, 680, 33);
 		panel.add(panel_1);
 		
 		btnSelectImage = new JButton("Select Reference Image");
@@ -228,6 +243,8 @@ public class UserInterface extends JFrame {
 		btnStartImageSimilarity.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				
+				UserInterface.getInstance().clearThumbnails();
+				
 				thread = new Thread(new Run());
 				thread.start();
 
@@ -254,23 +271,35 @@ public class UserInterface extends JFrame {
 		panel.add(panel_4);
 		panel_4.setLayout(null);
 		
-		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1 = new JScrollPane();
 		scrollPane_1.setToolTipText("test");
 		scrollPane_1.setBounds(428, 335, -419, -328);
 		panel_4.add(scrollPane_1);
 	}
 	
-	public synchronized void addThumbnail(File thumb)
+	public synchronized void addThumbnail(File thumb, double percent)
 	{
 		ImagePanel panel_t = new ImagePanel();
 		panel_t.setBackground(Color.DARK_GRAY);
 		panel_t.setBounds(left, top, 100, 100);
+		
+		percent = 100 - (double)((percent * 100) / 11041);
+		
+		DecimalFormat df = new DecimalFormat("#.##");
+		
+		textField = new JTextField();
+		textField.setEditable(false);
+		textField.setText(df.format(percent) + "%");
+		textField.setBounds(left + 5, top - 5, 50, 20);
+		textField.setColumns(10);
+		
+		panel_4.add(textField);
 		panel_4.add(panel_t);
 		
 		panel_t.create(thumb, 100, 100);
 		panel_t.repaint();
 		panel_4.repaint();
-		
+	
 		left += 110;
 		top += 0;
 		
@@ -279,7 +308,6 @@ public class UserInterface extends JFrame {
 			top += 110;
 			left = 10;
 		}
-		
 	}
 	
 	class Run implements Runnable
