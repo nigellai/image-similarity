@@ -54,13 +54,27 @@ public class ImageSimilarity {
 
 	private static JCommander jc;
 	
+	private static ImageSimilarity is;
+	
+	File image = null;
+	File directory = null;
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static ImageSimilarity getInstance()
+	{
+		return is;
+	}
+	
     /**
 	 * @param args
 	 * @throws Exception 
 	 */
 	public static void main(String[] args) throws RuntimeException, Exception 
 	{
-		ImageSimilarity is = new ImageSimilarity();
+		is = new ImageSimilarity();
 		
 		jc = new JCommander(is);
 		jc.setProgramName("ImageSimilarity");
@@ -99,12 +113,13 @@ public class ImageSimilarity {
 		if(gui)
 		{
 			try {
-				UserInterface ui = new UserInterface();
+				UserInterface ui = UserInterface.getInstance();
 				ui.setVisible(true);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		
 		if(threads == 0)
 		{
 			threads = 1;
@@ -118,23 +133,47 @@ public class ImageSimilarity {
 	    	throw new RuntimeException("Problems with creating the log files!");
 	    }
 		
-		// Run
+		// Run if not gui and all arguments are set up
 		if(img != null && dir != null)
 		{
-			run();
-		}
-		else
-		{
-			throw new RuntimeException("Comparision failed. Ooops!");
+			if(!gui)
+			{
+				check();
+				run();
+			}
 		}
 	}
 	
 	/**
-	 * Runs algorithm and checks some things
+	 * Sets image reference
+	 * 
+	 * @param i
 	 * 
 	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 */
-	private void run()
+	public void setImage(File i)
+	{
+		this.image = i;
+	}
+	
+	/**
+	 * Sets directory with images
+	 * 
+	 * @param d
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 */
+	public void setDirectory(File d)
+	{
+		this.directory = d;
+	}
+	
+	/**
+	 * Checks something
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 */
+	private void check()
 	{
 		if(Check.url(img))
 		{
@@ -205,20 +244,36 @@ public class ImageSimilarity {
 			}
 		}
 		
-		File image = new File(img);
-		File directory = new File(dir);
+		image = new File(img);
+		directory = new File(dir);
+	}
+	
+	public boolean ifFiles()
+	{
+		if(image != null && directory != null)
+		{
+			return true;
+		}
 		
-		if(!image.exists())
+		return false;
+	}
+	
+	/**
+	 * Runs algorithm and checks some things
+	 * 
+	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
+	 */
+	public void run()
+	{
+		if(image != null && !image.exists())
 		{
 			throw new RuntimeException("Image doesn't exist!");
 		}
 		
-		if(!directory.exists())
+		if(directory != null && !directory.exists())
 		{
 			throw new RuntimeException("Directory doesn't exist!");
 		}
-		
-		// TODO: Think about multithreading here, how we can implement it...
 		
 		DecimalFormat df = new DecimalFormat("#.##");
 		
@@ -228,17 +283,20 @@ public class ImageSimilarity {
 			Compare compare = new Compare(image, directory, threads);
 			
 			List<ImageHolder> images = compare.getResults();
-			for(ImageHolder i : images)
+			
+			if(images != null && !images.isEmpty())
 			{
-				System.out.println("Image: " + i.getFile().getPath());
-				System.out.println("Distance: " + df.format(i.getDistance()));
-				System.out.println("Difference: " + df.format(i.getDifference()) + "%");
-				System.out.println("Similarity: " + df.format(i.getSimilarity()) + "%");
-				System.out.println("\n");
+				for(ImageHolder i : images)
+				{
+					System.out.println("Image: " + i.getFile().getPath());
+					System.out.println("Distance: " + df.format(i.getDistance()));
+					System.out.println("Difference: " + df.format(i.getDifference()) + "%");
+					System.out.println("Similarity: " + df.format(i.getSimilarity()) + "%");
+					System.out.println("\n");
+				}
 			}
 			
 		} catch (Exception e) {
-			e.printStackTrace();
 			LOG.severe("Comparision failed. Ooops!");
 			throw new RuntimeException("Comparision failed. Ooops!");
 		}

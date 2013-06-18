@@ -16,6 +16,8 @@ import javax.media.jai.iterator.RandomIter;
 import javax.media.jai.iterator.RandomIterFactory;
 
 import com.is.filters.JPEGFilter;
+import com.is.general.ImageSimilarity;
+import com.is.general.UserInterface;
 import com.is.utils.ImageHolder;
 
 /**
@@ -46,25 +48,31 @@ public class Compare extends Thread
 	private int threads;
 	public long waitMills=100;
 	
+	private double progress;
+	private double theProgress;
+	
 	/**
 	 * Constructor for comparing reference file with all images inside specified directory.
 	 * 
 	 * @param reference	the reference file
 	 * @param directory	the directory with files to compare with reference
 	 * @param _threads	number of threads to run on
-	 * @throws IOException
 	 * @see File
 	 * 
 	 * @author Grzegorz Polek <grzegorz.polek@gmail.com>
 	 * @author Lukasz Pycia <fryta1990@gmail.com>
+	 * @throws Exception 
 	 */
-	public Compare(File reference, File directory, int _threads) throws IOException
+	public Compare(File reference, File directory, int _threads) throws Exception
 	{
 		// Number of threads
 		threads = _threads;
 		compareThread = new Thread[threads];
 		threadWorks = new boolean[threads];
 	
+		// Progress bar
+		theProgress = 0;
+		
 		// Scale image
 		RenderedImage ref = rescale(ImageIO.read(reference));
 		
@@ -74,6 +82,17 @@ public class Compare extends Thread
 	    // Now we need a component to store X images in a stack, where X is the
 	    // number of images in specified directory.
 	    others = getOtherImageFiles(directory);
+	    
+	    if(others.length <= 0)
+	    {
+	    	UserInterface.getInstance().showError("There are no .jpg images in specified directory!");
+	    	ImageSimilarity.getInstance().setImage(null);
+	    	ImageSimilarity.getInstance().setDirectory(null);
+	    	
+	    	throw new Exception("No .jpg images");
+	    }
+	    
+	    progress = 100/others.length;
 	    
 	    // For each image, calculate its signature and its distance from the
 	    // reference signature.
@@ -309,6 +328,10 @@ public class Compare extends Thread
     		    {
     		    	rothers[o] = rescale(ImageIO.read(others[o]));
     		        distances[o] = calcDistance(rothers[o]);
+    		        UserInterface.getInstance().addThumbnail(others[o]);
+    		        
+    		        theProgress += progress;
+    		        UserInterface.getInstance().setProgress(theProgress);
     		    }
     			threadWorks[i]=false;
 			} 

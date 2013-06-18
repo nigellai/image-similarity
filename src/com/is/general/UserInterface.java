@@ -3,6 +3,7 @@ package com.is.general;
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
 
+import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
@@ -12,8 +13,14 @@ import java.awt.Component;
 import javax.swing.JButton;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
+
 import javax.swing.Box;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.JProgressBar;
+import javax.swing.JScrollBar;
 import javax.swing.JTextPane;
 import javax.swing.UIManager;
 import javax.swing.JLabel;
@@ -23,25 +30,101 @@ import javax.swing.JDesktopPane;
 import javax.swing.border.EtchedBorder;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.io.File;
+import java.io.IOException;
+
 import javax.swing.GroupLayout;
 import javax.swing.GroupLayout.Alignment;
 
+import com.is.filters.JPEGFilter;
+import com.is.utils.ImagePanel;
+
+import javax.swing.SwingConstants;
+import javax.swing.JComboBox;
+import javax.swing.border.LineBorder;
+
 public class UserInterface extends JFrame {
 
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 7413631420807225473L;
 	private JPanel contentPane;
-
+	private static UserInterface instance = null;
+	private JProgressBar progressBar;
+	
+	final JFileChooser fcf = new JFileChooser();
+	final JFileChooser fcd = new JFileChooser();
+	
+	final JLabel lblNewLabel;
+	final JLabel lblNewLabel_1;
+	
+	final JButton btnStartImageSimilarity;
+	final JButton btnSelectImage;
+	final JButton btnSelectImagesTo;
+	
+	private JPanel panel_4;
+	
+	private ImagePanel panel_3;
+	
+	ImageSimilarity is = ImageSimilarity.getInstance();
+	
+	File image;
+	File directory;
+	
+	private Thread thread;
+	
+	/**
+	 * Returns instance of UserInterface
+	 * 
+	 * @return
+	 */
+	public static UserInterface getInstance()
+	{
+		if(instance == null)
+		{
+			instance = new UserInterface();
+		}
+		
+		return instance;
+	}
+	
+	/**
+	 * Set progress bar value
+	 * 
+	 * @param value
+	 */
+	public void setProgress(double value)
+	{
+		progressBar.setValue((int)value);
+		progressBar.repaint();
+	}
+	
+	/**
+	 * Shows error
+	 * 
+	 * @param msg
+	 */
+	public void showError(String msg)
+	{
+		JOptionPane.showMessageDialog(this, msg, "Error Occurred", JOptionPane.ERROR_MESSAGE);
+	}
+	
+	public void clearUI()
+	{
+		lblNewLabel.setText("Please select .jpg reference image");
+		lblNewLabel_1.setText("Please select directory with images to compare with");
+		
+		btnStartImageSimilarity.setEnabled(false);
+	}
+	
 	/**
 	 * Create the frame.
 	 */
-	public UserInterface() {
+	protected UserInterface() {
+		
 		setTitle("ImageSimilarity");
 		setBackground(Color.DARK_GRAY);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 716, 474);
+		setBounds(100, 100, 716, 503);
+		
 		contentPane = new JPanel();
 		contentPane.setForeground(Color.LIGHT_GRAY);
 		contentPane.setBackground(Color.BLACK);
@@ -54,34 +137,151 @@ public class UserInterface extends JFrame {
 		contentPane.add(panel);
 		panel.setLayout(null);
 		
-		JProgressBar progressBar = new JProgressBar();
+		lblNewLabel = new JLabel("Please select .jpg reference image");
+		lblNewLabel.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel.setForeground(Color.WHITE);
+		lblNewLabel.setBounds(12, 49, 302, 14);
+		panel.add(lblNewLabel);
+		
+		lblNewLabel_1 = new JLabel("Please select directory with images to compare with");
+		lblNewLabel_1.setHorizontalAlignment(SwingConstants.CENTER);
+		lblNewLabel_1.setForeground(Color.WHITE);
+		lblNewLabel_1.setBounds(324, 49, 356, 14);
+		panel.add(lblNewLabel_1);
+		
+		// Progress bar <3
+		progressBar = new JProgressBar();
 		progressBar.setForeground(Color.RED);
-		progressBar.setBounds(12, 49, 668, 14);
+		progressBar.setBounds(12, 74, 668, 14);
 		panel.add(progressBar);
 		
+		fcf.setFileSelectionMode(JFileChooser.FILES_ONLY);
+		fcf.setFileFilter(new JPEGFilter());
+		fcd.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+		
+		// Panel with buttons
 		JPanel panel_1 = new JPanel();
 		panel_1.setBackground(Color.DARK_GRAY);
 		panel_1.setBounds(12, 5, 668, 33);
 		panel.add(panel_1);
 		
-		JButton btnSelectImage = new JButton("Select Original Image");
+		btnSelectImage = new JButton("Select Reference Image");
+		btnSelectImagesTo = new JButton("Select Images to Compare with");
+		btnStartImageSimilarity = new JButton("Calculate Image Similarity");
+		
+		// Get reference image
 		btnSelectImage.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
+				int returnVal = fcf.showOpenDialog(UserInterface.this);
+
+		        if (returnVal == JFileChooser.APPROVE_OPTION) {
+		            image = fcf.getSelectedFile();
+		            is.setImage(image);
+		            lblNewLabel.setText(image.getAbsolutePath());
+		            
+		            panel_3.create(image, 200, 200);
+		            panel_3.repaint();
+		        }
+		        
+		        if(is.ifFiles())
+		        {
+		        	btnStartImageSimilarity.setEnabled(true);
+		        }
+		        else
+		        {
+		        	btnStartImageSimilarity.setEnabled(false);
+		        }
 			}
 		});
 		panel_1.add(btnSelectImage);
-		
-		JButton btnSelectImagesTo = new JButton("Select Images to Compare with");
+				
+		// Get images to compare with
+		btnSelectImagesTo.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				int returnVal = fcd.showOpenDialog(UserInterface.this);
+				
+		        if (returnVal == JFileChooser.APPROVE_OPTION) {
+		            directory = fcd.getSelectedFile();
+		            is.setDirectory(directory);
+		            lblNewLabel_1.setText(directory.getAbsolutePath());
+		        }
+		        
+		        if(is.ifFiles())
+		        {
+		        	btnStartImageSimilarity.setEnabled(true);
+		        }
+		        else
+		        {
+		        	btnStartImageSimilarity.setEnabled(false);
+		        }
+			}
+		});
 		panel_1.add(btnSelectImagesTo);
 		
-		JButton btnStartImageSimilarity = new JButton("Calculate Image Similarity");
+		// Run ImageSimilarity algorithm
+		btnStartImageSimilarity.setEnabled(false);
+		btnStartImageSimilarity.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				thread = new Thread(new Run());
+				thread.start();
+
+			}
+		});
 		panel_1.add(btnStartImageSimilarity);
 		
 		JPanel panel_2 = new JPanel();
 		panel_2.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
 		panel_2.setBackground(Color.DARK_GRAY);
-		panel_2.setBounds(12, 74, 668, 340);
+		panel_2.setBounds(12, 99, 220, 344);
 		panel.add(panel_2);
 		panel_2.setLayout(null);
+		
+		panel_3 = new ImagePanel();
+		panel_3.setBackground(Color.DARK_GRAY);
+		panel_3.setBounds(10, 11, 200, 200);
+		panel_2.add(panel_3);
+		
+		panel_4 = new JPanel();
+		panel_4.setBorder(new LineBorder(new Color(0, 0, 0)));
+		panel_4.setBackground(Color.DARK_GRAY);
+		panel_4.setBounds(242, 99, 438, 344);
+		panel.add(panel_4);
+		panel_4.setLayout(null);
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1.setToolTipText("test");
+		scrollPane_1.setBounds(428, 335, -419, -328);
+		panel_4.add(scrollPane_1);
+	}
+	
+	public void addThumbnail(File thumb)
+	{
+		ImagePanel panel_t = new ImagePanel();
+		panel_t.setBackground(Color.DARK_GRAY);
+		panel_t.setBounds(10, 10, 200, 200);
+		panel_4.add(panel_t);
+		
+		panel_t.create(thumb, 100, 100);
+		panel_t.repaint();
+	}
+	
+	class Run implements Runnable
+	{
+		@Override
+		public void run() 
+		{
+			try {
+				is.run();
+				UserInterface.getInstance().setProgress(100);
+			} 
+			catch (Exception e)
+			{
+				UserInterface.getInstance().clearUI();
+				return;
+			}
+			
+		}
+		
 	}
 }
